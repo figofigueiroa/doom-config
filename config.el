@@ -120,7 +120,9 @@
 
 (after! dap-mode
   (require 'dap-netcore)
-  (setq dap-netcore-install-dir "/usr/bin/")
+  ;; Caminho cross-platform: doom-data-dir aponta para ~/.local/share/doom/ no Linux
+  ;; e ~/AppData/Roaming/doom/ no Windows. O dap-netcore-update-debugger instala aqui.
+  (setq dap-netcore-install-dir (expand-file-name "netcoredbg/" doom-data-dir))
   (dap-ui-mode 1)
   (dap-auto-configure-mode 1)
 
@@ -133,15 +135,17 @@
     (let* ((root (projectile-project-root))
            (proj-name (figo/dotnet-project-name))
            (dlls (directory-files-recursively root "\\.dll$"))
+           ;; Normaliza separadores para forward-slash (compatibilidade Windows/Linux)
+           (normalize (lambda (p) (replace-regexp-in-string "\\\\" "/" p)))
            (bin-dlls (seq-filter
-                      (lambda (p) (string-match-p "/bin/Debug/" p))
-                      dlls))
+                       (lambda (p) (string-match-p "/bin/Debug/" (funcall normalize p)))
+                       dlls))
            (app-dlls (seq-remove
-                      (lambda (p) (string-match-p "\\.Tests/" p))
-                      bin-dlls)))
+                       (lambda (p) (string-match-p "\\.Tests/" (funcall normalize p)))
+                       bin-dlls)))
       (or (car (seq-filter
-                (lambda (p) (string-match-p (concat proj-name "\\.dll$") p))
-                app-dlls))
+                 (lambda (p) (string-match-p (concat proj-name "\\.dll$") p))
+                 app-dlls))
           (car app-dlls)
           (error "DLL da aplicação '%s' não encontrada" proj-name))))
 
@@ -149,12 +153,14 @@
     "Encontra a DLL do projeto de testes."
     (let* ((root (projectile-project-root))
            (dlls (directory-files-recursively root "\\.dll$"))
+           ;; Normaliza separadores para forward-slash (compatibilidade Windows/Linux)
+           (normalize (lambda (p) (replace-regexp-in-string "\\\\" "/" p)))
            (bin-dlls (seq-filter
-                      (lambda (p) (string-match-p "/bin/Debug/" p))
-                      dlls))
+                       (lambda (p) (string-match-p "/bin/Debug/" (funcall normalize p)))
+                       dlls))
            (test-dlls (seq-filter
-                       (lambda (p) (string-match-p "\\.Tests/" p))
-                       bin-dlls)))
+                        (lambda (p) (string-match-p "\\.Tests/" (funcall normalize p)))
+                        bin-dlls)))
       (or (car test-dlls)
           (error "DLL de testes não encontrada"))))
 
@@ -169,6 +175,15 @@
    (list :type "coreclr" :request "launch" :name "NetCore :: Tests"
          :program 'figo/dotnet-find-test-dll
          :cwd '(lambda () (projectile-project-root)))))
+
+;;; ---------------------------------------------------------------
+;;; Compatibilidade Windows
+;;; ---------------------------------------------------------------
+
+;; bash-language-server não funciona no Windows nativo sem WSL;
+;; desabilita LSP para sh-mode nesse ambiente.
+(when (eq system-type 'windows-nt)
+  (add-hook! sh-mode (lsp-mode -1)))
 
 ;;; ---------------------------------------------------------------
 ;;; Bookmarks (bm.el)
