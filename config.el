@@ -181,3 +181,18 @@
         "t b" #'bm-toggle
         "] b" #'bm-next
         "[ b" #'bm-previous))
+;;; ---------------------------------------------------------------
+;;; evil-textobj-tree-sitter
+;;; ---------------------------------------------------------------
+(use-package! evil-textobj-tree-sitter
+  :after evil
+  :config
+  ;; Bind standard text objects for structural selection
+  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+
+  (define-key evil-inner-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.inner"))
+  (define-key evil-outer-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.outer"))
+
+  (define-key evil-inner-text-objects-map "l" (evil-textobj-tree-sitter-get-textobj "loop.inner"))
+  (define-key evil-outer-text-objects-map "l" (evil-textobj-tree-sitter-get-textobj "loop.outer")))

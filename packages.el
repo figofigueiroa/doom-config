@@ -52,3 +52,4 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
 (package! bm)
+(package! evil-textobj-tree-sitter)
