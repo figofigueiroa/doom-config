@@ -32,6 +32,7 @@
 ;; You can override the recipe of a built in package without having to specify
 ;; all the properties for `:recipe'. These will inherit the rest of its recipe
 ;; from Doom or MELPA/ELPA/Emacsmirror:
+
 ;; (package! builtin-package :recipe (:nonrecursive t))
 ;; (package! builtin-package-2 :recipe (:repo "myfork/package"))
 
@@ -53,3 +54,4 @@
 ;; (unpin! t)
 (package! bm)
 (package! evil-textobj-tree-sitter)
+(package! eca :recipe (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el")))

@@ -76,43 +76,28 @@
 ;;
 ;;
 ;;; ---------------------------------------------------------------
-;;; LSP + Roslyn (C#)
+;;; Eglot + csharp-ls (Roslyn) para C#, com decompilação
 ;;; ---------------------------------------------------------------
+;;
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((csharp-mode csharp-ts-mode) . ("roslyn-language-server"
+                                                 "--stdio"
+                                                 "--autoLoadProjects"
+                                                 "--logLevel" "Information")))
+  (add-to-list 'eglot-server-programs
+               '((typescript-mode typescript-ts-mode tsx-ts-mode) . ("typescript-language-server" "--stdio"))))
 
 ;;; ---------------------------------------------------------------
-;;; LSP + OmniSharp (C#)
+;;; Diagnósticos (Flymake, nativo do eglot)
 ;;; ---------------------------------------------------------------
-
-(after! lsp-mode
-  ;; Habilita navegação para fontes decompiladads de bibliotecas terceiras
-  (setq lsp-csharp-omnisharp-enable-decompilation-support t)
-  (setq lsp-file-watch-threshold 5000))
-
-;;; ---------------------------------------------------------------
-;;; Diagnósticos claros (LSP UI)
-;;; ---------------------------------------------------------------
-
-(after! lsp-ui
-  ;; sideline: mostra diagnóstico direto na linha, sem precisar abrir popup
-  (setq lsp-ui-sideline-enable t)
-  (setq lsp-ui-sideline-show-diagnostics t)
-  (setq lsp-ui-sideline-show-code-actions t)
-  (setq lsp-ui-sideline-delay 0.3)
-
-  ;; doc: hover mais legível, sem poluir a tela
-  (setq lsp-ui-doc-enable t)
-  (setq lsp-ui-doc-delay 0.5)
-  (setq lsp-ui-doc-position 'top)
-  (setq lsp-ui-doc-max-width 80)
-
-  ;; peek: navegação de referências/definições num painel lateral
-  (setq lsp-ui-peek-enable t)
-  (setq lsp-ui-peek-always-show t))
-
-(after! flycheck
-  ;; garante que o flycheck usa o backend do lsp em vez de linters externos concorrendo
-  (setq lsp-diagnostics-provider :flycheck)
-  (setq flycheck-display-errors-delay 0.3))
+;; Eglot usa flymake em vez de flycheck. Se quiser manter a UI do flycheck
+;; (fringe icons, etc.) só pra não perder o hábito visual do lsp-ui, dá pra
+;; usar o pacote `flycheck-eglot' (não vem com o Doom, precisaria adicionar
+;; em packages.el). Por padrão deixamos no flymake, que já é suficiente e
+;; fica mais leve.
+(after! flymake
+  (setq flymake-no-changes-timeout 0.3))
 
 ;;; ---------------------------------------------------------------
 ;;; Debugger (dap-mode + Roslyn/netcoredbg)
@@ -138,14 +123,14 @@
            ;; Normaliza separadores para forward-slash (compatibilidade Windows/Linux)
            (normalize (lambda (p) (replace-regexp-in-string "\\\\" "/" p)))
            (bin-dlls (seq-filter
-                       (lambda (p) (string-match-p "/bin/Debug/" (funcall normalize p)))
-                       dlls))
+                      (lambda (p) (string-match-p "/bin/Debug/" (funcall normalize p)))
+                      dlls))
            (app-dlls (seq-remove
-                       (lambda (p) (string-match-p "\\.Tests/" (funcall normalize p)))
-                       bin-dlls)))
+                      (lambda (p) (string-match-p "\\.Tests/" (funcall normalize p)))
+                      bin-dlls)))
       (or (car (seq-filter
-                 (lambda (p) (string-match-p (concat proj-name "\\.dll$") p))
-                 app-dlls))
+                (lambda (p) (string-match-p (concat proj-name "\\.dll$") p))
+                app-dlls))
           (car app-dlls)
           (error "DLL da aplicação '%s' não encontrada" proj-name))))
 
@@ -156,11 +141,11 @@
            ;; Normaliza separadores para forward-slash (compatibilidade Windows/Linux)
            (normalize (lambda (p) (replace-regexp-in-string "\\\\" "/" p)))
            (bin-dlls (seq-filter
-                       (lambda (p) (string-match-p "/bin/Debug/" (funcall normalize p)))
-                       dlls))
+                      (lambda (p) (string-match-p "/bin/Debug/" (funcall normalize p)))
+                      dlls))
            (test-dlls (seq-filter
-                        (lambda (p) (string-match-p "\\.Tests/" (funcall normalize p)))
-                        bin-dlls)))
+                       (lambda (p) (string-match-p "\\.Tests/" (funcall normalize p)))
+                       bin-dlls)))
       (or (car test-dlls)
           (error "DLL de testes não encontrada"))))
 
